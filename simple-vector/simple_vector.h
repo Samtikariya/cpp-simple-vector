@@ -28,16 +28,16 @@ public:
 
     SimpleVector() noexcept = default;
 
-    explicit SimpleVector(size_t size) : size_(size), capacity_(size), begin_(new Type[size]) {
+    explicit SimpleVector(size_t size) : size_(size), capacity_(size), vector_begin_(new Type[size]) {
         uninitialized_fill(begin(), end(), Type{});
     }
 
-    SimpleVector(size_t size, const Type& value) : size_(size), capacity_(size), begin_(new Type[size]) {
+    SimpleVector(size_t size, const Type& value) : size_(size), capacity_(size), vector_begin_(new Type[size]) {
         uninitialized_fill(begin(), end(), value);
     }
 
-    SimpleVector(std::initializer_list<Type> init) : size_(init.size()), capacity_(init.size()), begin_(new Type[init.size()]) {
-        uninitialized_move(init.begin(), init.end(), begin_.Get());
+    SimpleVector(std::initializer_list<Type> init) : size_(init.size()), capacity_(init.size()), vector_begin_(new Type[init.size()]) {
+        uninitialized_move(init.begin(), init.end(), vector_begin_.Get());
     }
 
     SimpleVector(const SimpleVector& other) {
@@ -148,11 +148,13 @@ public:
 
 public:
     Type& operator[](size_t index) noexcept {
-        return begin_[index];
+        assert(index < size_);
+        return vector_begin_[index];
     }
 
     const Type& operator[](size_t index) const noexcept {
-        return begin_[index];
+        assert(index < size_);
+        return vector_begin_[index];
     }
 
     Type& At(size_t index) {
@@ -160,7 +162,7 @@ public:
             throw std::out_of_range("index overflow"s);
         }
 
-        return begin_[index];
+        return vector_begin_[index];
     }
 
     const Type& At(size_t index) const {
@@ -168,38 +170,38 @@ public:
             throw std::out_of_range("index overflow"s);
         }
 
-        return begin_[index];
+        return vector_begin_[index];
     }
 
     void swap(SimpleVector& other) noexcept {
         std::swap(capacity_, other.capacity_);
         std::swap(size_, other.size_);
-        begin_.swap(other.begin_);
+        vector_begin_.swap(other.vector_begin_);
     }
 
 public:
     Iterator begin() noexcept {
-        return begin_.Get();
+        return vector_begin_.Get();
     }
 
     Iterator end() noexcept {
-        return begin_.Get() + GetSize();
+        return vector_begin_.Get() + GetSize();
     }
 
     ConstIterator begin() const noexcept {
-        return begin_.Get();
+        return vector_begin_.Get();
     }
 
     ConstIterator end() const noexcept {
-        return begin_.Get() + GetSize();
+        return vector_begin_.Get() + GetSize();
     }
 
     ConstIterator cbegin() const noexcept {
-        return begin_.Get();
+        return vector_begin_.Get();
     }
 
     ConstIterator cend() const noexcept {
-        return begin_.Get() + GetSize();
+        return vector_begin_.Get() + GetSize();
     }
 
 private:
@@ -210,7 +212,7 @@ private:
         ArrayPtr<Type> new_memory(new_capacity);
         uninitialized_move(begin, end, new_memory.Get());
 
-        begin_.swap(new_memory);
+        vector_begin_.swap(new_memory);
         capacity_ = new_capacity;
     }
 
@@ -246,7 +248,7 @@ private:
     size_t size_ = 0;
     size_t capacity_ = 0;
 
-    ArrayPtr<Type> begin_;
+    ArrayPtr<Type> vector_begin_;
 };
 
 
